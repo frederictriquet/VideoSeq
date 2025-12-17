@@ -194,5 +194,62 @@ export const sequencerActions = {
 		a.download = `videoSeq-${Date.now()}.json`;
 		a.click();
 		URL.revokeObjectURL(url);
+	},
+
+	importFromJSON: async (jsonData: any) => {
+		try {
+			// Valider la version
+			if (jsonData.version !== '1.0') {
+				throw new Error('Version de fichier non supportée');
+			}
+
+			// Charger d'abord les vidéos depuis ./clips pour avoir les URLs
+			const response = await fetch('/api/clips');
+			const clipsData = await response.json();
+			const availableVideos = new Map<string, string>();
+
+			clipsData.files?.forEach((filename: string) => {
+				const name = filename.replace(/\.[^/.]+$/, '');
+				availableVideos.set(name, `/api/clips/${filename}`);
+			});
+
+			sequencerState.update((state) => {
+				// Nettoyer les anciennes URLs
+				state.instruments.forEach((inst) => {
+					if (inst.videoUrl) {
+						URL.revokeObjectURL(inst.videoUrl);
+					}
+				});
+
+				// Reconstruire les instruments avec les vidéos disponibles
+				const instruments = jsonData.instruments.map((inst: any) => {
+					const videoUrl = availableVideos.get(inst.name) || null;
+					return {
+						id: inst.id,
+						name: inst.name,
+						color: inst.color,
+						gridPosition: inst.gridPosition,
+						videoFile: null,
+						videoUrl
+					};
+				});
+
+				// Restaurer l'état complet
+				return {
+					instruments,
+					clips: jsonData.clips,
+					isPlaying: false,
+					currentTime: 0,
+					bpm: jsonData.bpm,
+					totalBeats: jsonData.totalBeats,
+					gridSize: jsonData.gridSize
+				};
+			});
+
+			return true;
+		} catch (err) {
+			console.error('Erreur lors de l\'import:', err);
+			return false;
+		}
 	}
 };

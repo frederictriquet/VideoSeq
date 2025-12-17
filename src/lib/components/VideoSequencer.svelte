@@ -7,6 +7,7 @@
 	import InstrumentPanel from './InstrumentPanel.svelte';
 
 	let fileInput: HTMLInputElement;
+	let jsonFileInput: HTMLInputElement;
 	let instrumentName = '';
 
 	async function loadClipsFromFolder() {
@@ -60,6 +61,35 @@
 		sequencerActions.exportToJSON($sequencerState);
 	}
 
+	function triggerJsonFileInput() {
+		jsonFileInput?.click();
+	}
+
+	async function handleJsonFileSelect(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+
+		if (file && file.type === 'application/json') {
+			try {
+				const text = await file.text();
+				const jsonData = JSON.parse(text);
+				const success = await sequencerActions.importFromJSON(jsonData);
+
+				if (success) {
+					alert('Projet chargé avec succès !');
+				} else {
+					alert('Erreur lors du chargement du projet');
+				}
+			} catch (err) {
+				alert('Fichier JSON invalide');
+				console.error('Erreur parsing JSON:', err);
+			}
+			target.value = '';
+		} else {
+			alert('Veuillez sélectionner un fichier JSON');
+		}
+	}
+
 	// Debug info
 	$: debugInfo = {
 		isPlaying: $sequencerState.isPlaying,
@@ -85,6 +115,9 @@
 			<button onclick={loadClipsFromFolder} class="load-btn" title="Charger depuis ./clips">
 				📁 Charger Clips
 			</button>
+			<button onclick={triggerJsonFileInput} class="import-btn" title="Importer un projet JSON">
+				📤 Import JSON
+			</button>
 			<button onclick={exportProject} class="export-btn" title="Exporter le projet">
 				📥 Export JSON
 			</button>
@@ -93,6 +126,13 @@
 				accept="video/*"
 				bind:this={fileInput}
 				onchange={handleFileSelect}
+				style="display: none;"
+			/>
+			<input
+				type="file"
+				accept="application/json,.json"
+				bind:this={jsonFileInput}
+				onchange={handleJsonFileSelect}
 				style="display: none;"
 			/>
 		</div>
@@ -239,6 +279,29 @@
 	}
 
 	.load-btn:active {
+		transform: translateY(0);
+	}
+
+	.import-btn {
+		padding: 0.5rem 1.5rem;
+		background: #2a2a2a;
+		border: 1px solid #444;
+		border-radius: 4px;
+		color: white;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-size: 0.9rem;
+	}
+
+	.import-btn:hover {
+		background: #333;
+		border-color: #45b7d1;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(69, 183, 209, 0.3);
+	}
+
+	.import-btn:active {
 		transform: translateY(0);
 	}
 
