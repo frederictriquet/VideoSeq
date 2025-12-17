@@ -1,105 +1,122 @@
-# SvelteBase
+# VideoSeq - Séquenceur Vidéo Musical
 
-> 🚀 Template de projet SvelteKit complet avec CI/CD, tests, Docker et bonnes pratiques
+> 🎬 Un séquenceur innovant qui fonctionne comme un DAW audio mais avec des pistes vidéo
 
-Un template production-ready pour démarrer rapidement vos projets SvelteKit avec toutes les meilleures pratiques déjà configurées.
-
-[![CI](https://github.com/frederictriquet/SvelteBase/actions/workflows/ci.yml/badge.svg)](https://github.com/frederictriquet/SvelteBase/actions/workflows/ci.yml)
-[![Docker](https://github.com/frederictriquet/SvelteBase/actions/workflows/docker.yml/badge.svg)](https://github.com/frederictriquet/SvelteBase/actions/workflows/docker.yml)
+VideoSeq vous permet de créer des compositions musicales visuelles en synchronisant des vidéos courtes d'instruments. Chaque vidéo montre un son d'instrument et peut être déclenchée à différents instants pour créer une mélodie unique.
 
 ---
 
-## ✨ Fonctionnalités incluses
+## ✨ Fonctionnalités
 
-### 🎨 Frontend
+### 🎵 Séquenceur Professionnel
 
-- **SvelteKit 5** avec TypeScript
-- **Vite** pour le build ultra-rapide
-- **Adapter Node** pour production Docker
-- Structure de projet optimisée
+- **Timeline type DAW** - Interface inspirée des logiciels professionnels (Ableton, FL Studio)
+- **Grille vidéo 3×3** - Affichage simultané de jusqu'à 9 vidéos d'instruments
+- **Synchronisation audio/vidéo** - Lecture parfaitement synchronisée avec mixage audio
+- **Contrôle BPM** - Ajustement du tempo de 40 à 300 BPM
+- **Édition intuitive** - Glisser-déposer des clips sur la timeline
 
-### 🧪 Tests
+### 🎬 Gestion des Vidéos
 
-- **Vitest** - Tests unitaires avec UI
-- **Playwright** - Tests e2e automatisés
-- **Stryker** - Tests de mutation (mutation score: 100%)
-- Coverage configuré avec V8
+- **Upload local** - Importez vos propres vidéos d'instruments
+- **Assignation automatique** - Chaque instrument reçoit une région dans la grille
+- **Lecture intelligente** - Les vidéos démarrent et s'arrêtent selon la timeline
+- **Visualisation colorée** - Chaque instrument a sa propre couleur
 
-### ✅ Qualité de code
+### 🎛️ Contrôles
 
-- **Husky** - Hooks Git automatiques
-- **Commitlint** - Messages de commit conventionnels
-- **Prettier** - Formatage automatique du code
-- **lint-staged** - Vérifications pré-commit
-- **svelte-check** - Validation TypeScript
-
-### 🚀 CI/CD GitHub Actions
-
-- **Workflow CI** - Tests, type checking, build
-- **Docker Build & Push** - Publication automatique sur ghcr.io
-- **Release Please** - Versioning sémantique automatique
-- Caching optimisé (npm + Docker layers)
-
-### 🐳 Docker
-
-- Dockerfile multi-stage optimisé
-- Build multi-plateforme (amd64 + arm64)
-- docker-compose.yml pour développement
-- Health checks configurés
-
-### 📚 Documentation
-
-- Guides de configuration complets
-- Architecture documentée
-- Conventions de code établies
+- **Transport** - Play, Pause, Stop
+- **Navigation** - Cliquez sur la timeline pour vous déplacer
+- **Tempo réglable** - BPM ajustable en temps réel
+- **Boucle automatique** - La séquence boucle automatiquement
 
 ---
 
 ## 🚀 Démarrage rapide
 
-### 1. Utiliser ce template
-
-Cliquez sur le bouton **"Use this template"** en haut de cette page, ou :
+### 1. Installation
 
 ```bash
-# Via GitHub CLI
-gh repo create mon-projet --template frederictriquet/SvelteBase --private
+# Cloner le projet
+git clone <votre-repo>
+cd VideoSeq
 
-# Ou clonez directement
-git clone https://github.com/frederictriquet/SvelteBase.git mon-projet
-cd mon-projet
-```
-
-### 2. Initialiser le projet
-
-```bash
-# Exécuter le script d'initialisation
-./init-project.sh mon-projet "Description de mon projet"
-
-# Ou manuellement :
+# Installer les dépendances
 npm install
-npm run prepare  # Configure Husky
 ```
 
-### 3. Développement
+### 2. Lancer l'application
 
 ```bash
-# Lancer le serveur de développement
+# Démarrer le serveur de développement
 npm run dev
 
-# Ouvrir dans le navigateur
-npm run dev -- --open
+# L'application sera disponible sur http://localhost:5173
 ```
 
-### 4. Configuration GitHub (Important !)
+### 3. Utilisation
 
-Suivez le guide : [.github/TEMPLATE_SETUP.md](.github/TEMPLATE_SETUP.md)
+#### Ajouter un instrument
 
-**Essentiel :** Activer les permissions GitHub Actions pour Release Please :
+1. Entrez le nom de l'instrument dans le champ "Nom de l'instrument"
+2. Cliquez sur "Ajouter Vidéo"
+3. Sélectionnez un fichier vidéo court (quelques secondes)
+4. L'instrument apparaît dans le panneau de gauche et occupe une région de la grille
 
-- Settings → Actions → General
-- ✅ "Read and write permissions"
-- ✅ "Allow GitHub Actions to create and approve pull requests"
+#### Créer une séquence
+
+1. Sur la timeline, cliquez sur une piste d'instrument où vous voulez placer un clip
+2. Maintenez le bouton enfoncé et glissez pour définir la durée du clip
+3. Relâchez pour créer le clip
+4. Répétez pour ajouter d'autres clips
+
+#### Éditer les clips
+
+- **Déplacer** : Cliquez et glissez un clip sur la timeline
+- **Supprimer** : Survolez un clip et cliquez sur le bouton ×
+
+#### Contrôler la lecture
+
+- **Play/Pause** : Cliquez sur le bouton play (triangle/pause)
+- **Stop** : Arrête la lecture et revient au début
+- **Naviguer** : Cliquez sur la timeline pour vous déplacer
+- **Régler le BPM** : Modifiez la valeur dans le champ BPM
+
+---
+
+## 🎯 Conseils d'utilisation
+
+### Format des vidéos recommandé
+
+- **Durée** : 1-5 secondes par clip
+- **Résolution** : 720p ou 1080p
+- **Format** : MP4, WebM
+- **Audio** : Incluez l'audio du son de l'instrument dans la vidéo
+
+### Exemples de vidéos à créer
+
+- Vidéos de vous-même jouant une note sur un instrument
+- Captures d'écran de synthétiseurs virtuels
+- Vidéos de samples visuels synchronisés avec des sons
+- Animations générées avec du son
+
+### Workflow créatif
+
+1. Préparez 3-9 vidéos courtes d'instruments différents
+2. Importez-les dans VideoSeq
+3. Créez un pattern rythmique sur 4-8 beats
+4. Ajustez le BPM pour trouver le bon groove
+5. Expérimentez avec différents placements de clips
+
+---
+
+## 🛠️ Technologies
+
+- **SvelteKit 5** - Framework web moderne et réactif
+- **TypeScript** - Typage statique
+- **Vite** - Build ultra-rapide
+- **Canvas API** - Rendu de la timeline
+- **Web Audio API** - Lecture vidéo synchronisée
 
 ---
 

@@ -59,3 +59,20 @@ docker-compose*.yml
 .temp/
 tmp/
 traefik/acme.json
+
+# VideoSeq specific
+output/
+clips/*.mp4
+clips/*.webm
+clips/*.mov
+render-service/
+render-test.py
+render-videoSeq.py
+render-videoSeq.sh
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/

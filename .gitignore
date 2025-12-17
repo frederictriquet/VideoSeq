@@ -34,3 +34,28 @@ reports/
 
 # Docker & Traefik
 traefik/acme.json
+
+/output/
+
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+.venv/
+venv/
+ENV/
+
+# VideoSeq specific
+/output/
+/clips/*.mp4
+/clips/*.webm
+/clips/*.mov
+render-videoSeq.py
+render-videoSeq.sh
+
+# Python virtual environments
+render-service/.venv/
+render-service/__pycache__/
+render-service/*.pyc
