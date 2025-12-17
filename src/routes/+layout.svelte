@@ -3,6 +3,7 @@
 	import { updated } from '$app/stores';
 	import { dev } from '$app/environment';
 	import favicon from '$lib/assets/favicon.svg';
+	import '../app.css';
 
 	let { children } = $props();
 
@@ -141,13 +142,15 @@
 
 	.main-content {
 		flex: 1;
-		padding: 2rem 1rem;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.footer {
-		background: #f8f9fa;
-		border-top: 1px solid #e9ecef;
-		padding: 1.5rem 1rem;
+		background: #252525;
+		border-top: 1px solid #333;
+		padding: 0.5rem 1rem;
 		margin-top: auto;
 	}
 
@@ -159,8 +162,8 @@
 
 	.build-info {
 		margin: 0;
-		font-size: 0.875rem;
-		color: #6c757d;
+		font-size: 0.75rem;
+		color: #666;
 		font-family: 'Courier New', monospace;
 	}
 </style>
