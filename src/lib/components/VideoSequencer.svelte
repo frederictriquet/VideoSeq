@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { sequencerState, sequencerActions } from '$lib/stores/sequencer';
 	import Timeline from './Timeline.svelte';
 	import VideoGrid from './VideoGrid.svelte';
@@ -7,6 +8,32 @@
 
 	let fileInput: HTMLInputElement;
 	let instrumentName = '';
+
+	async function loadClipsFromFolder() {
+		try {
+			const response = await fetch('/api/clips');
+			const data = await response.json();
+
+			if (data.files && data.files.length > 0) {
+				// Charger chaque fichier vidéo
+				for (const filename of data.files) {
+					// Extraire le nom de l'instrument du nom de fichier (sans extension)
+					const name = filename.replace(/\.[^/.]+$/, '');
+					const videoUrl = `/api/clips/${filename}`;
+
+					// Ajouter l'instrument
+					sequencerActions.addInstrument(name, null, videoUrl);
+				}
+
+				alert(`${data.files.length} clips chargés depuis ./clips`);
+			} else {
+				alert('Aucun clip trouvé dans le répertoire ./clips');
+			}
+		} catch (err) {
+			console.error('Erreur lors du chargement des clips:', err);
+			alert('Impossible de charger les clips depuis ./clips');
+		}
+	}
 
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -27,6 +54,10 @@
 
 	function triggerFileInput() {
 		fileInput?.click();
+	}
+
+	function exportProject() {
+		sequencerActions.exportToJSON($sequencerState);
 	}
 
 	// Debug info
@@ -50,6 +81,12 @@
 			/>
 			<button onclick={triggerFileInput} class="add-btn">
 				+ Ajouter Vidéo
+			</button>
+			<button onclick={loadClipsFromFolder} class="load-btn" title="Charger depuis ./clips">
+				📁 Charger Clips
+			</button>
+			<button onclick={exportProject} class="export-btn" title="Exporter le projet">
+				📥 Export JSON
 			</button>
 			<input
 				type="file"
@@ -156,6 +193,52 @@
 	}
 
 	.add-btn:active {
+		transform: translateY(0);
+	}
+
+	.export-btn {
+		padding: 0.5rem 1.5rem;
+		background: #2a2a2a;
+		border: 1px solid #444;
+		border-radius: 4px;
+		color: white;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-size: 0.9rem;
+	}
+
+	.export-btn:hover {
+		background: #333;
+		border-color: #555;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	}
+
+	.export-btn:active {
+		transform: translateY(0);
+	}
+
+	.load-btn {
+		padding: 0.5rem 1.5rem;
+		background: #2a2a2a;
+		border: 1px solid #444;
+		border-radius: 4px;
+		color: white;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-size: 0.9rem;
+	}
+
+	.load-btn:hover {
+		background: #333;
+		border-color: #667eea;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+	}
+
+	.load-btn:active {
 		transform: translateY(0);
 	}
 

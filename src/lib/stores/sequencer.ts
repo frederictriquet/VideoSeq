@@ -32,9 +32,9 @@ export const timeUtils = {
 
 // Actions du séquenceur
 export const sequencerActions = {
-	addInstrument: (name: string, videoFile: File) => {
+	addInstrument: (name: string, videoFile: File | null = null, videoUrl: string | null = null) => {
 		sequencerState.update((state) => {
-			const videoUrl = URL.createObjectURL(videoFile);
+			const url = videoFile ? URL.createObjectURL(videoFile) : videoUrl;
 			const id = `instrument-${Date.now()}-${Math.random()}`;
 			const availablePositions = Array.from(
 				{ length: state.gridSize.rows * state.gridSize.cols },
@@ -65,7 +65,7 @@ export const sequencerActions = {
 						id,
 						name,
 						videoFile,
-						videoUrl,
+						videoUrl: url,
 						color,
 						gridPosition
 					}
@@ -162,5 +162,37 @@ export const sequencerActions = {
 			...state,
 			currentTime: Math.max(0, Math.min(state.totalBeats, time))
 		}));
+	},
+
+	exportToJSON: (state: SequencerState) => {
+		// Créer une version sérialisable (sans File et videoUrl)
+		const exportData = {
+			version: '1.0',
+			bpm: state.bpm,
+			totalBeats: state.totalBeats,
+			gridSize: state.gridSize,
+			instruments: state.instruments.map((inst) => ({
+				id: inst.id,
+				name: inst.name,
+				color: inst.color,
+				gridPosition: inst.gridPosition
+			})),
+			clips: state.clips.map((clip) => ({
+				id: clip.id,
+				instrumentId: clip.instrumentId,
+				startTime: clip.startTime,
+				duration: clip.duration,
+				trackIndex: clip.trackIndex
+			}))
+		};
+
+		const json = JSON.stringify(exportData, null, 2);
+		const blob = new Blob([json], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `videoSeq-${Date.now()}.json`;
+		a.click();
+		URL.revokeObjectURL(url);
 	}
 };
