@@ -50,6 +50,8 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOST=0.0.0.0
+    volumes:
+      - ./clips:/app/clips:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.sveltebase.entrypoints=http"
@@ -69,6 +71,25 @@ services:
       timeout: 3s
       retries: 3
       start_period: 40s
+
+  render:
+    build:
+      context: ./render-service
+      dockerfile: Dockerfile
+    container_name: VideoSeq-render
+    restart: unless-stopped
+    networks:
+      - web
+    volumes:
+      - ./clips:/app/clips:ro
+      - ./output:/app/output
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
 
 networks:
   web:

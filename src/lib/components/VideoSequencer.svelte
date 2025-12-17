@@ -62,9 +62,32 @@
 		sequencerActions.exportToJSON($sequencerState);
 	}
 
-	function generateRenderScript() {
-		sequencerActions.generateFFmpegScript($sequencerState);
-		alert('Script de rendu téléchargé ! Exécutez-le avec: bash render-videoSeq.sh');
+	async function renderVideo() {
+		// Vérifier qu'il y a des clips
+		if ($sequencerState.clips.length === 0) {
+			alert('Aucun clip à rendre. Ajoutez des clips sur la timeline avant de générer le rendu.');
+			return;
+		}
+
+		// Rendu via API
+		const button = document.querySelector('.render-btn') as HTMLButtonElement;
+		if (button) {
+			button.disabled = true;
+			button.textContent = '⏳ Rendu en cours...';
+		}
+
+		const success = await sequencerActions.renderVideoAPI($sequencerState);
+
+		if (button) {
+			button.disabled = false;
+			button.textContent = '🎬 Rendu Vidéo';
+		}
+
+		if (success) {
+			alert('✅ Vidéo téléchargée avec succès !');
+		} else {
+			alert('❌ Erreur lors du rendu. Vérifiez que le service Docker est lancé:\ndocker-compose -f docker-compose.dev.yml up -d');
+		}
 	}
 
 	function triggerJsonFileInput() {
@@ -130,7 +153,7 @@
 			<button onclick={exportProject} class="export-btn" title="Exporter le projet">
 				📥 Export JSON
 			</button>
-			<button onclick={generateRenderScript} class="render-btn" title="Générer script de rendu FFmpeg">
+			<button onclick={renderVideo} class="render-btn" title="Générer le rendu vidéo">
 				🎬 Rendu Vidéo
 			</button>
 			<input

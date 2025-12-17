@@ -23,11 +23,14 @@
 	let newClipTrack = 0;
 	let newClipInstrumentId = '';
 
-	$: tracks = $sequencerState.instruments.map((inst, index) => ({
-		index,
-		instrument: inst,
-		clips: $sequencerState.clips.filter((clip) => clip.instrumentId === inst.id)
-	}));
+	// Trier les instruments par gridPosition pour que les tracks correspondent à la grille
+	$: tracks = [...$sequencerState.instruments]
+		.sort((a, b) => a.gridPosition - b.gridPosition)
+		.map((inst, index) => ({
+			index,
+			instrument: inst,
+			clips: $sequencerState.clips.filter((clip) => clip.instrumentId === inst.id)
+		}));
 
 	$: timelineWidth = $sequencerState.totalBeats * PIXELS_PER_BEAT;
 

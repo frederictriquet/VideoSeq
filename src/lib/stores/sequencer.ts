@@ -458,5 +458,70 @@ print(f"Fichier: {output_file}")
 		URL.revokeObjectURL(url);
 
 		return script;
+	},
+
+	renderVideoAPI: async (state: SequencerState) => {
+		try {
+			// Préparer les données pour l'API
+			const renderData = {
+				bpm: state.bpm,
+				gridSize: state.gridSize,
+				instruments: state.instruments.map(inst => ({
+					id: inst.id,
+					name: inst.name,
+					gridPosition: inst.gridPosition
+				})),
+				clips: state.clips.map(clip => ({
+					id: clip.id,
+					instrumentId: clip.instrumentId,
+					startTime: clip.startTime,
+					duration: clip.duration
+				}))
+			};
+
+			// Créer un FormData pour envoyer les données + vidéos uploadées
+			const formData = new FormData();
+			formData.append('data', JSON.stringify(renderData));
+
+			// Ajouter les vidéos qui ont été uploadées (pas celles de ./clips/)
+			const uploadedVideos = state.instruments.filter(inst => inst.videoFile !== null);
+			for (const inst of uploadedVideos) {
+				if (inst.videoFile) {
+					// Créer un nouveau fichier avec le bon nom (nom de l'instrument + extension)
+					const extension = inst.videoFile.name.split('.').pop();
+					const newFile = new File([inst.videoFile], `${inst.name}.${extension}`, {
+						type: inst.videoFile.type
+					});
+					formData.append('videos', newFile);
+				}
+			}
+
+			console.log(`📤 Envoi de ${uploadedVideos.length} vidéos uploadées + ${state.instruments.length - uploadedVideos.length} vidéos locales`);
+
+			// Appeler l'API de rendu
+			const response = await fetch('/api/render', {
+				method: 'POST',
+				body: formData
+			});
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
+			}
+
+			// Télécharger le fichier vidéo
+			const blob = await response.blob();
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `render_${Date.now()}.mp4`;
+			a.click();
+			URL.revokeObjectURL(url);
+
+			return true;
+		} catch (err) {
+			console.error('Erreur de rendu:', err);
+			return false;
+		}
 	}
 };
