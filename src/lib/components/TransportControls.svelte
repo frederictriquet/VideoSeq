@@ -43,6 +43,20 @@
 			</svg>
 		</button>
 
+		<button
+			class="control-btn loop-btn"
+			class:active={$sequencerState.loopMode}
+			onclick={() => sequencerActions.toggleLoopMode()}
+			title={$sequencerState.loopMode ? 'Loop: ON' : 'Loop: OFF'}
+		>
+			<svg viewBox="0 0 24 24" class="icon">
+				<path
+					d="M17 17H7V14L3 18L7 22V19H19V13H17M7 7H17V10L21 6L17 2V5H5V11H7V7Z"
+					fill="currentColor"
+				/>
+			</svg>
+		</button>
+
 		<div class="time-display">
 			<span class="time-label">Temps:</span>
 			<span class="time-value">
@@ -127,6 +141,23 @@
 	.stop-btn:hover {
 		background: #ff4444;
 		border-color: #ff6666;
+	}
+
+	.loop-btn {
+		background: #2a2a2a;
+	}
+
+	.loop-btn.active {
+		background: linear-gradient(135deg, #f7dc6f 0%, #f8b739 100%);
+		border-color: transparent;
+	}
+
+	.loop-btn:hover {
+		background: #333;
+	}
+
+	.loop-btn.active:hover {
+		box-shadow: 0 4px 12px rgba(248, 183, 57, 0.4);
 	}
 
 	.icon {

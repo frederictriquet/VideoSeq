@@ -12,10 +12,12 @@
 		videoRefs.set(id, element);
 		element.preload = 'auto';
 		element.loop = false;
+		console.log(`📹 Video registered: ${id}, src: ${element.src}`);
 
 		return {
 			destroy() {
 				videoRefs.delete(id);
+				console.log(`🗑️ Video unregistered: ${id}`);
 			}
 		};
 	}
@@ -27,6 +29,12 @@
 			return $sequencerState.instruments.find((inst) => inst.gridPosition === index) || null;
 		}
 	);
+
+	// Logger les instruments pour debug
+	$: {
+		console.log('📋 Current instruments:', $sequencerState.instruments.map(i => ({ id: i.id, name: i.name, hasUrl: !!i.videoUrl })));
+		console.log('🎬 Current clips:', $sequencerState.clips.map(c => ({ id: c.id, instrumentId: c.instrumentId, start: c.startTime, duration: c.duration })));
+	}
 
 	// Mapper les clips actifs avec leur progression
 	let activeClipsMap = new Map<string, { clip: any; progress: number }>();
@@ -41,6 +49,8 @@
 
 	// Gérer la lecture des vidéos selon les clips actifs
 	$: {
+		console.log(`🎥 VideoRefs map:`, Array.from(videoRefs.keys()));
+
 		// Si on ne joue pas, arrêter toutes les vidéos
 		if (!$sequencerState.isPlaying) {
 			videoRefs.forEach((video) => {
@@ -63,7 +73,10 @@
 				if (isActive) {
 					currentActiveInstruments.add(clip.instrumentId);
 					const video = videoRefs.get(clip.instrumentId);
-					if (!video) return;
+					if (!video) {
+						console.warn(`⚠️ No video ref found for instrument ${clip.instrumentId}`);
+						return;
+					}
 
 					// Vérifier si c'est un nouveau clip (différent ID)
 					const currentInfo = activeClipInfo.get(clip.instrumentId);
@@ -71,6 +84,7 @@
 
 					if (isNewClip) {
 						// Nouveau clip : enregistrer ses infos et calculer le playbackRate
+						console.log(`🎬 Starting new clip ${clip.id} for instrument ${clip.instrumentId}`);
 						activeClipInfo.set(clip.instrumentId, {
 							clipId: clip.id,
 							startTime: clipStart
@@ -78,6 +92,7 @@
 
 						// Assurer que la vidéo est chargée et a des métadonnées
 						if (video.readyState < 2) {
+							console.log(`⏳ Loading video for ${clip.instrumentId}`);
 							video.load();
 						}
 
@@ -85,9 +100,10 @@
 						const clipDurationSeconds = timeUtils.beatsToSeconds(clip.duration, $sequencerState.bpm);
 
 						// Ajuster la vitesse de lecture pour que la vidéo corresponde à la durée du clip
-						// Si la vidéo dure 3s mais le clip doit durer 2s → playbackRate = 3/2 = 1.5
 						const videoDuration = video.duration || clipDurationSeconds;
 						video.playbackRate = videoDuration / clipDurationSeconds;
+
+						console.log(`⚙️ Clip duration: ${clipDurationSeconds}s, Video duration: ${videoDuration}s, playbackRate: ${video.playbackRate}`);
 
 						// Démarrer depuis le début
 						video.currentTime = 0;

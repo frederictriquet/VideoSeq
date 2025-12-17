@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "bpm": 120,
+  "totalBeats": 64,
+  "gridSize": {
+    "rows": 2,
+    "cols": 2
+  },
+  "instruments": [
+    {
+      "id": "instrument-1765981549032-0.7696190847013328",
+      "name": "baeuh",
+      "color": "#FF6B6B",
+      "gridPosition": 0
+    },
+    {
+      "id": "instrument-1765981549032-0.8680374421907794",
+      "name": "boom",
+      "color": "#4ECDC4",
+      "gridPosition": 1
+    },
+    {
+      "id": "instrument-1765981549032-0.796081107700513",
+      "name": "tchak",
+      "color": "#45B7D1",
+      "gridPosition": 2
+    },
+    {
+      "id": "instrument-1765981549032-0.7553916608807343",
+      "name": "tsss",
+      "color": "#FFA07A",
+      "gridPosition": 3
+    }
+  ],
+  "clips": [
+    {
+      "id": "clip-1765981660717-0.8335401157456249",
+      "instrumentId": "instrument-1765981549032-0.7696190847013328",
+      "startTime": 0,
+      "duration": 1,
+      "trackIndex": 0
+    },
+    {
+      "id": "clip-1765981666456-0.011486343066256954",
+      "instrumentId": "instrument-1765981549032-0.8680374421907794",
+      "startTime": 0,
+      "duration": 1,
+      "trackIndex": 1
+    },
+    {
+      "id": "clip-1765981668946-0.39089913541523",
+      "instrumentId": "instrument-1765981549032-0.8680374421907794",
+      "startTime": 3,
+      "duration": 1,
+      "trackIndex": 1
+    },
+    {
+      "id": "clip-1765981669510-0.576225429640177",
+      "instrumentId": "instrument-1765981549032-0.8680374421907794",
+      "startTime": 4,
+      "duration": 1,
+      "trackIndex": 1
+    },
+    {
+      "id": "clip-1765981675763-0.7406754815649897",
+      "instrumentId": "instrument-1765981549032-0.7553916608807343",
+      "startTime": 1,
+      "duration": 1,
+      "trackIndex": 3
+    },
+    {
+      "id": "clip-1765981677517-0.16661545865937077",
+      "instrumentId": "instrument-1765981549032-0.7553916608807343",
+      "startTime": 3,
+      "duration": 1,
+      "trackIndex": 3
+    },
+    {
+      "id": "clip-1765981678593-0.631218319289814",
+      "instrumentId": "instrument-1765981549032-0.7553916608807343",
+      "startTime": 5,
+      "duration": 1,
+      "trackIndex": 3
+    },
+    {
+      "id": "clip-1765981679427-0.22800066746708214",
+      "instrumentId": "instrument-1765981549032-0.7553916608807343",
+      "startTime": 7,
+      "duration": 1,
+      "trackIndex": 3
+    },
+    {
+      "id": "clip-1765981691506-0.5112475579778296",
+      "instrumentId": "instrument-1765981549032-0.796081107700513",
+      "startTime": 1,
+      "duration": 1,
+      "trackIndex": 2
+    }
+  ]
+}

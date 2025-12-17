@@ -9,7 +9,8 @@ const initialState: SequencerState = {
 	currentTime: 0,
 	bpm: 120,
 	totalBeats: 64, // 16 mesures de 4 temps par défaut
-	gridSize: { rows: 2, cols: 2 }
+	gridSize: { rows: 2, cols: 2 },
+	loopMode: false
 };
 
 export const sequencerState = writable<SequencerState>(initialState);
@@ -162,6 +163,35 @@ export const sequencerActions = {
 			...state,
 			currentTime: Math.max(0, Math.min(state.totalBeats, time))
 		}));
+	},
+
+	toggleLoopMode: () => {
+		sequencerState.update((state) => ({
+			...state,
+			loopMode: !state.loopMode
+		}));
+	},
+
+	setGridSize: (rows: number, cols: number) => {
+		sequencerState.update((state) => {
+			// Vérifier si on peut réduire la grille
+			const newTotalCells = rows * cols;
+			const currentMaxPosition = Math.max(
+				...state.instruments.map((inst) => inst.gridPosition),
+				-1
+			);
+
+			// Si on réduit, vérifier que tous les instruments tiennent dans la nouvelle grille
+			if (currentMaxPosition >= newTotalCells) {
+				console.warn('Impossible de réduire: des instruments occupent des positions qui seraient supprimées');
+				return state;
+			}
+
+			return {
+				...state,
+				gridSize: { rows, cols }
+			};
+		});
 	},
 
 	exportToJSON: (state: SequencerState) => {

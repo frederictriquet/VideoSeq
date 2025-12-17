@@ -46,15 +46,28 @@
 		const deltaBeat = timeUtils.secondsToBeats(deltaTime / 1000, $sequencerState.bpm);
 		let newTime = $sequencerState.currentTime + deltaBeat;
 
-		// Boucler ou s'arrêter à la fin
-		if (newTime >= $sequencerState.totalBeats) {
-			newTime = 0; // Boucle
-			// ou pour s'arrêter : sequencerActions.stop();
+		// Trouver la fin réelle du dernier clip
+		const lastClipEnd = $sequencerState.clips.reduce((max, clip) => {
+			return Math.max(max, clip.startTime + clip.duration);
+		}, 0);
+
+		// S'arrêter à la fin du dernier clip (ou totalBeats si pas de clips)
+		const endPoint = lastClipEnd > 0 ? lastClipEnd : $sequencerState.totalBeats;
+
+		if (newTime >= endPoint) {
+			if ($sequencerState.loopMode) {
+				// Mode boucle : revenir au début et continuer
+				sequencerActions.setCurrentTime(0);
+			} else {
+				// Mode normal : arrêter
+				console.log(`🛑 Fin atteinte (${endPoint} beats), arrêt de la lecture`);
+				sequencerActions.stop();
+			}
+		} else {
+			sequencerActions.setCurrentTime(newTime);
 		}
 
-		sequencerActions.setCurrentTime(newTime);
 		drawTimeline();
-
 		animationFrame = requestAnimationFrame(updatePlayback);
 	}
 

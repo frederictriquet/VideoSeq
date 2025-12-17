@@ -23,6 +23,7 @@ export interface SequencerState {
 	bpm: number;
 	totalBeats: number;
 	gridSize: { rows: number; cols: number };
+	loopMode: boolean;
 }
 
 export interface PlaybackState {

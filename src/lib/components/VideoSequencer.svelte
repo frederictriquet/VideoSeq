@@ -5,6 +5,7 @@
 	import VideoGrid from './VideoGrid.svelte';
 	import TransportControls from './TransportControls.svelte';
 	import InstrumentPanel from './InstrumentPanel.svelte';
+	import GridSizeControl from './GridSizeControl.svelte';
 
 	let fileInput: HTMLInputElement;
 	let jsonFileInput: HTMLInputElement;
@@ -73,10 +74,13 @@
 			try {
 				const text = await file.text();
 				const jsonData = JSON.parse(text);
+
+				console.log('📤 Import JSON:', jsonData);
 				const success = await sequencerActions.importFromJSON(jsonData);
 
 				if (success) {
-					alert('Projet chargé avec succès !');
+					console.log('✅ État après import:', $sequencerState);
+					alert(`Projet chargé : ${jsonData.instruments.length} instruments, ${jsonData.clips.length} clips`);
 				} else {
 					alert('Erreur lors du chargement du projet');
 				}
@@ -141,6 +145,7 @@
 	<div class="main-content">
 		<div class="left-panel">
 			<InstrumentPanel />
+			<GridSizeControl />
 		</div>
 
 		<div class="center-panel">
