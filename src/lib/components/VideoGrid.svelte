@@ -1,11 +1,48 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { sequencerState, playbackState, timeUtils } from '$lib/stores/sequencer';
+	import { sequencerState, playbackState, timeUtils, sequencerActions } from '$lib/stores/sequencer';
 	import type { VideoInstrument } from '$lib/types/sequencer';
 
 	// Références aux éléments vidéo
 	let videoRefs: Map<string, HTMLVideoElement> = new Map();
 	let gridContainer: HTMLDivElement;
+
+	// Variables pour le drag & drop
+	let draggedInstrumentId: string | null = null;
+	let dragOverPosition: number | null = null;
+
+	function handleDragStart(event: DragEvent, instrumentId: string) {
+		draggedInstrumentId = instrumentId;
+		if (event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move';
+		}
+	}
+
+	function handleDragOver(event: DragEvent, position: number) {
+		event.preventDefault();
+		dragOverPosition = position;
+		if (event.dataTransfer) {
+			event.dataTransfer.dropEffect = 'move';
+		}
+	}
+
+	function handleDragLeave() {
+		dragOverPosition = null;
+	}
+
+	function handleDrop(event: DragEvent, position: number) {
+		event.preventDefault();
+		if (draggedInstrumentId) {
+			sequencerActions.moveInstrumentToPosition(draggedInstrumentId, position);
+		}
+		draggedInstrumentId = null;
+		dragOverPosition = null;
+	}
+
+	function handleDragEnd() {
+		draggedInstrumentId = null;
+		dragOverPosition = null;
+	}
 
 	// Action Svelte pour enregistrer une référence vidéo
 	function videoAction(element: HTMLVideoElement, id: string) {
@@ -148,18 +185,33 @@
 	style="--grid-cols: {$sequencerState.gridSize.cols}; --grid-rows: {$sequencerState.gridSize.rows}"
 >
 	{#each gridArray as instrument, index (index)}
-		<div class="grid-cell" style="border: 2px solid {instrument?.color || '#333'}">
+		<div
+			class="grid-cell"
+			class:drag-over={dragOverPosition === index}
+			style="border: 2px solid {instrument?.color || '#333'}"
+			ondragover={(e) => handleDragOver(e, index)}
+			ondragleave={handleDragLeave}
+			ondrop={(e) => handleDrop(e, index)}
+		>
 			{#if instrument && instrument.videoUrl}
-				<video
-					use:videoAction={instrument.id}
-					src={instrument.videoUrl}
-					class="video-player"
-					muted={false}
+				<div
+					class="video-wrapper"
+					draggable="true"
+					ondragstart={(e) => handleDragStart(e, instrument.id)}
+					ondragend={handleDragEnd}
 				>
-					<track kind="captions" />
-				</video>
-				<div class="instrument-label" style="background: {instrument.color}">
-					{instrument.name}
+					<video
+						use:videoAction={instrument.id}
+						src={instrument.videoUrl}
+						class="video-player"
+						muted={false}
+					>
+						<track kind="captions" />
+					</video>
+					<div class="instrument-label" style="background: {instrument.color}">
+						{instrument.name}
+					</div>
+					<div class="drag-handle" title="Glisser pour déplacer">⋮⋮</div>
 				</div>
 			{:else}
 				<div class="empty-cell">
@@ -191,12 +243,50 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		transition: all 0.2s;
+	}
+
+	.grid-cell.drag-over {
+		background: #2a2a4a;
+		border-color: #667eea !important;
+		box-shadow: inset 0 0 20px rgba(102, 126, 234, 0.3);
+	}
+
+	.video-wrapper {
+		width: 100%;
+		height: 100%;
+		position: relative;
+		cursor: move;
+	}
+
+	.video-wrapper:active {
+		cursor: grabbing;
 	}
 
 	.video-player {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		pointer-events: none;
+	}
+
+	.drag-handle {
+		position: absolute;
+		top: 4px;
+		right: 4px;
+		background: rgba(0, 0, 0, 0.6);
+		color: white;
+		padding: 4px 8px;
+		border-radius: 3px;
+		font-size: 1rem;
+		opacity: 0;
+		transition: opacity 0.2s;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.video-wrapper:hover .drag-handle {
+		opacity: 1;
 	}
 
 	.instrument-label {

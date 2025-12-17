@@ -62,6 +62,11 @@
 		sequencerActions.exportToJSON($sequencerState);
 	}
 
+	function generateRenderScript() {
+		sequencerActions.generateFFmpegScript($sequencerState);
+		alert('Script de rendu téléchargé ! Exécutez-le avec: bash render-videoSeq.sh');
+	}
+
 	function triggerJsonFileInput() {
 		jsonFileInput?.click();
 	}
@@ -125,6 +130,9 @@
 			<button onclick={exportProject} class="export-btn" title="Exporter le projet">
 				📥 Export JSON
 			</button>
+			<button onclick={generateRenderScript} class="render-btn" title="Générer script de rendu FFmpeg">
+				🎬 Rendu Vidéo
+			</button>
 			<input
 				type="file"
 				accept="video/*"
@@ -144,8 +152,8 @@
 
 	<div class="main-content">
 		<div class="left-panel">
-			<InstrumentPanel />
 			<GridSizeControl />
+			<InstrumentPanel />
 		</div>
 
 		<div class="center-panel">
@@ -307,6 +315,27 @@
 	}
 
 	.import-btn:active {
+		transform: translateY(0);
+	}
+
+	.render-btn {
+		padding: 0.5rem 1.5rem;
+		background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+		border: none;
+		border-radius: 4px;
+		color: white;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-size: 0.9rem;
+	}
+
+	.render-btn:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+	}
+
+	.render-btn:active {
 		transform: translateY(0);
 	}
 

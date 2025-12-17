@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store';
+import { writable } from 'svelte/store';
 import type { SequencerState, PlaybackState, VideoClip } from '$lib/types/sequencer';
 
 // État principal du séquenceur
@@ -43,7 +43,14 @@ export const sequencerActions = {
 			);
 			const usedPositions = state.instruments.map((inst) => inst.gridPosition);
 			const freePositions = availablePositions.filter((pos) => !usedPositions.includes(pos));
-			const gridPosition = freePositions[0] ?? 0;
+
+			// Vérifier qu'il reste de la place
+			if (freePositions.length === 0) {
+				console.warn('Grille pleine : impossible d\'ajouter plus d\'instruments');
+				return state;
+			}
+
+			const gridPosition = freePositions[0];
 
 			const colors = [
 				'#FF6B6B',
@@ -172,6 +179,47 @@ export const sequencerActions = {
 		}));
 	},
 
+	moveInstrumentToPosition: (instrumentId: string, newPosition: number) => {
+		sequencerState.update((state) => {
+			// Vérifier que la position est valide
+			const maxPosition = state.gridSize.rows * state.gridSize.cols - 1;
+			if (newPosition < 0 || newPosition > maxPosition) {
+				return state;
+			}
+
+			// Trouver l'instrument à cette position
+			const occupyingInstrument = state.instruments.find((inst) => inst.gridPosition === newPosition);
+			const movingInstrument = state.instruments.find((inst) => inst.id === instrumentId);
+
+			if (!movingInstrument) return state;
+
+			// Si la position est occupée, échanger les positions
+			if (occupyingInstrument) {
+				const oldPosition = movingInstrument.gridPosition;
+				return {
+					...state,
+					instruments: state.instruments.map((inst) => {
+						if (inst.id === instrumentId) {
+							return { ...inst, gridPosition: newPosition };
+						}
+						if (inst.id === occupyingInstrument.id) {
+							return { ...inst, gridPosition: oldPosition };
+						}
+						return inst;
+					})
+				};
+			} else {
+				// Position libre, simplement déplacer
+				return {
+					...state,
+					instruments: state.instruments.map((inst) =>
+						inst.id === instrumentId ? { ...inst, gridPosition: newPosition } : inst
+					)
+				};
+			}
+		});
+	},
+
 	setGridSize: (rows: number, cols: number) => {
 		sequencerState.update((state) => {
 			// Vérifier si on peut réduire la grille
@@ -272,7 +320,8 @@ export const sequencerActions = {
 					currentTime: 0,
 					bpm: jsonData.bpm,
 					totalBeats: jsonData.totalBeats,
-					gridSize: jsonData.gridSize
+					gridSize: jsonData.gridSize,
+					loopMode: jsonData.loopMode || false
 				};
 			});
 
@@ -281,5 +330,133 @@ export const sequencerActions = {
 			console.error('Erreur lors de l\'import:', err);
 			return false;
 		}
+	},
+
+	generateFFmpegScript: (state: SequencerState) => {
+		// Calculer la durée totale
+		const lastClipEnd = state.clips.reduce((max, clip) => {
+			return Math.max(max, clip.startTime + clip.duration);
+		}, 0);
+		const totalDuration = timeUtils.beatsToSeconds(lastClipEnd, state.bpm);
+
+		const gridCols = state.gridSize.cols;
+		const gridRows = state.gridSize.rows;
+		const cellWidth = Math.floor(1920 / gridCols);
+		const cellHeight = Math.floor(1080 / gridRows);
+
+		let script = `#!/usr/bin/env python3
+"""
+Script de rendu VideoSeq
+Généré le ${new Date().toLocaleString()}
+BPM: ${state.bpm}, Durée: ${totalDuration.toFixed(2)}s, Grille: ${gridCols}x${gridRows}
+
+Installation: pip install moviepy
+Utilisation: python3 render-videoSeq.py
+"""
+
+from moviepy import VideoFileClip, ColorClip, CompositeVideoClip
+import os
+
+# Configuration
+CLIPS_DIR = "./clips"
+OUTPUT_DIR = "./output"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+DURATION = ${totalDuration.toFixed(3)}
+WIDTH, HEIGHT = 1920, 1080
+CELL_WIDTH = ${cellWidth}
+CELL_HEIGHT = ${cellHeight}
+
+print("🎬 Rendu vidéo VideoSeq")
+print(f"Durée: {DURATION:.2f}s")
+print(f"Grille: ${gridCols}x${gridRows}")
+print(f"Clips: ${state.clips.length}")
+print("")
+
+# Fond noir
+base = ColorClip(size=(WIDTH, HEIGHT), color=(0,0,0), duration=DURATION)
+
+# Liste de tous les clips
+clips = []
+
+`;
+
+		// Générer le code pour chaque clip
+		state.clips.forEach((clip, idx) => {
+			const inst = state.instruments.find(i => i.id === clip.instrumentId);
+			if (!inst) return;
+
+			const startSec = timeUtils.beatsToSeconds(clip.startTime, state.bpm);
+			const durationSec = timeUtils.beatsToSeconds(clip.duration, state.bpm);
+
+			const row = Math.floor(inst.gridPosition / gridCols);
+			const col = inst.gridPosition % gridCols;
+			const x = col * cellWidth;
+			const y = row * cellHeight;
+
+			script += `# Clip ${idx + 1}: ${inst.name} aux beats ${clip.startTime}-${clip.startTime + clip.duration}\n`;
+			script += `video${idx} = VideoFileClip(f"{CLIPS_DIR}/${inst.name}.mp4")\n`;
+			script += `clip_duration${idx} = min(${durationSec.toFixed(3)}, video${idx}.duration)\n`;
+			script += `video${idx} = video${idx}.subclipped(0, clip_duration${idx})\n`;
+			script += `video${idx} = video${idx}.resized((${cellWidth}, ${cellHeight}))\n`;
+			script += `video${idx} = video${idx}.with_start(${startSec.toFixed(3)})\n`;
+			script += `video${idx} = video${idx}.with_position((${x}, ${y}))\n`;
+			script += `clips.append(video${idx})\n\n`;
+		});
+
+		script += `# Créer les images fixes (première frame) pour chaque instrument
+print("Création des images fixes...")
+static_frames = []
+
+`;
+
+		// Créer les frames statiques pour chaque instrument
+		state.instruments.forEach((inst) => {
+			const row = Math.floor(inst.gridPosition / gridCols);
+			const col = inst.gridPosition % gridCols;
+			const x = col * cellWidth;
+			const y = row * cellHeight;
+
+			script += `# Frame fixe pour ${inst.name}\n`;
+			script += `static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')} = VideoFileClip(f"{CLIPS_DIR}/${inst.name}.mp4")\n`;
+			script += `static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')} = static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')}.to_ImageClip(0)\n`;
+			script += `static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')} = static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')}.resized((${cellWidth}, ${cellHeight}))\n`;
+			script += `static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')} = static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')}.with_duration(DURATION)\n`;
+			script += `static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')} = static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')}.with_position((${x}, ${y}))\n`;
+			script += `static_frames.append(static_${inst.name.replace(/[^a-zA-Z0-9]/g, '_')})\n\n`;
+		});
+
+		script += `# Composer: fond noir + frames fixes + clips animés
+print(f"Composition de {len(static_frames)} frames fixes + {len(clips)} clips animés...")
+final = CompositeVideoClip([base] + static_frames + clips, size=(WIDTH, HEIGHT))
+
+# Rendu
+from datetime import datetime
+output_file = f"{OUTPUT_DIR}/render_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+print(f"Rendu vers: {output_file}")
+
+final.write_videofile(
+    output_file,
+    fps=30,
+    codec='libx264',
+    audio_codec='aac',
+    bitrate='5000k',
+    preset='medium'
+)
+
+print("✅ Rendu terminé!")
+print(f"Fichier: {output_file}")
+`;
+
+		// Télécharger
+		const blob = new Blob([script], { type: 'text/x-python' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'render-videoSeq.py';
+		a.click();
+		URL.revokeObjectURL(url);
+
+		return script;
 	}
 };
