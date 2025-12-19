@@ -134,7 +134,6 @@ npm run dev
 ### ✅ Docker
 
 - Dockerfile multi-stage
-- Build multi-plateforme (amd64 + arm64)
 - docker-compose.yml
 - Health checks
 
