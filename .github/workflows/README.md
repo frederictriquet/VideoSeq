@@ -50,7 +50,6 @@ Sans cette configuration, Release Please ne pourra pas créer de PRs automatique
 
 **Fonctionnalités:**
 
-- Build multi-plateformes (linux/amd64, linux/arm64)
 - Stratégie de tagging automatique:
   - `latest` pour la branche master
   - Tags basés sur le SHA pour la traçabilité

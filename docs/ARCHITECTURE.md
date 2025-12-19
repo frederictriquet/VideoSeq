@@ -169,7 +169,7 @@ Push vers GitHub
     ├─> WORKFLOW DOCKER (sur master uniquement)
     │   ├─> Setup Docker Buildx
     │   ├─> Login ghcr.io
-    │   ├─> Build multi-platform (amd64 + arm64)
+    │   ├─> Build
     │   ├─> Push vers ghcr.io
     │   └─> Attestation de provenance
     │
